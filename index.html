@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Fcc Camper Leaderboard</title>
+    <title>Fcc Recipe Box</title>
     <script src="https://unpkg.com/react@latest/dist/react.js"></script>
     <script src="https://unpkg.com/react-dom@latest/dist/react-dom.js"></script>
     <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -15,9 +15,250 @@
   <body>
     <div id="root"></div>
     <script type="text/babel">
+         var EditModalComponent = React.createClass({
+           getInitialState(){
+             var id = "editModal" + this.props.recipe.id;
+             return {
+               id:id
+             }
+           },
+           handleClick(event){
+             console.log('EditModalComponent handleClick');
+             event.preventDefault();
+
+             var updatedRecipeName = this.refs.recipeName.value;
+             var updatedIngredients = this.refs.ingredients.value;
+
+             var updatedRecipe = {
+               id: this.props.recipe.id,
+               name: updatedRecipeName,
+               ingredients: updatedIngredients.split(",")
+             };
+             this.props.onEdit(updatedRecipe);
+           },
+           render(){
+             var ingredients = this.props.recipe.ingredients.toString();
+             return (
+               <div id={this.state.id} className="modal fade" role="dialog">
+                   <div className="modal-dialog">
+                     <div className="modal-content">
+                       <div className="modal-header">
+                           <button type="button" className="close" data-dismiss="modal">&times;</button>
+                           <h4 className="modal-title">Edit Recipe</h4>
+                       </div>
+                       <div className="modal-body">
+                           <form role="form">
+                             <div className="form-group">
+                               <label>Recipe</label>
+                               <input type="text" className="form-control" ref="recipeName" defaultValue={this.props.recipe.name}/>
+                             </div>
+                             <div className="form-group">
+                               <label>Edit Ingredients &nbsp; (<small>List each item seperated with commas</small>)</label>
+                               <textarea type="text" className="form-control" ref="ingredients" defaultValue={ingredients}></textarea>
+                             </div>
+                           </form>
+                       </div>
+                       <div className="modal-footer">
+                         <button type="button" className="btn btn-primary" data-dismiss="modal" onClick={this.handleClick}>
+                           Update
+                         </button>
+                         <button type="button" className="btn btn-default" data-dismiss="modal">Close</button>
+                       </div>
+                     </div>
+                   </div>
+               </div>
+             );
+           }
+         });
+        //RecipeItem component
+        var RecipeItem = React.createClass({
+          onEdit(recipe){
+            this.props.onEdit(recipe);
+          },
+          onDelete(){
+            this.props.onDelete(this.props.recipe);
+          },
+          render(){
+            var ingredients = this.props.recipe.ingredients.map(function (item, i){
+              return <li key={i} className="list-group-item">{item}</li>;
+            });
+            return (
+              <div className="panel panel-default">
+                  <div className="panel-heading">
+                    <h4 className="panel-title">
+                      <a data-toggle="collapse" href={"#collapse"+this.props.recipe.id} data-parent="#accordion">
+                          {this.props.recipe.name}
+                      </a>
+                    </h4>
+                  </div>
+                  <div id={"collapse"+this.props.recipe.id} className="panel-collapse collapse">
+                    <div className="panel-heading">
+                      <h4>Ingredients</h4>
+                      <hr/>
+                      <ul className="list-group">
+                        {ingredients}
+                      </ul>
+                      <button type="button" className="btn btn-danger" onClick={this.onDelete}>Delete</button>
+                      <button type="button" className="btn btn-default" data-toggle="modal" data-target={"#editModal"+this.props.recipe.id}>Edit</button>
+                      <EditModalComponent recipe={this.props.recipe} onEdit={this.onEdit}/>
+                    </div>
+                </div>
+              </div>
+            );
+          }
+        });
+        //Modal component
+        var AddModalComponent = React.createClass({
+          handleClick(event){
+            event.preventDefault();
+
+            var recipeName = this.refs.recipeName.value;
+            var ingredients = this.refs.ingredients.value;
+            this.refs.recipeName.value = "";
+            this.refs.ingredients.value = "";
+
+            var newRecipe = {
+              id: '',
+              name: recipeName,
+              ingredients: ingredients.split(",")
+            };
+
+            this.props.onAdd(newRecipe);
+          },
+          render(){
+            return (
+
+              <div id="addModal" className="modal fade" role="dialog">
+                  <div className="modal-dialog">
+                    <div className="modal-content">
+                      <div className="modal-header">
+                          <button type="button" className="close" data-dismiss="modal">&times;</button>
+                          <h4 className="modal-title">Add a Recipe</h4>
+                      </div>
+                      <div className="modal-body">
+                          <form role="form">
+                            <div className="form-group">
+                              <label>Recipe</label>
+                              <input type="text" className="form-control" ref="recipeName"/>
+                            </div>
+                            <div className="form-group">
+                              <label>Ingredients &nbsp; (<small>List each item seperated with commas</small>)</label>
+                              <textarea type="text" className="form-control" ref="ingredients"></textarea>
+                            </div>
+                          </form>
+                      </div>
+                      <div className="modal-footer">
+                        <button type="button" className="btn btn-primary" data-dismiss="modal" onClick={this.handleClick}>
+                          Add
+                        </button>
+                        <button type="button" className="btn btn-default" data-dismiss="modal">Close</button>
+                      </div>
+                    </div>
+                  </div>
+              </div>
+            );
+          }
+        });
+
+
+          //Recipe List component
+          var RecipeComponent = React.createClass({
+            getInitialState() {
+              return {
+                recipes: [
+                  {
+                    id: 0,
+                    name: "scrambled eggs",
+                    ingredients: ["egg", "oil", "salt", "onion"]
+                  },
+                  {
+                    id: 1,
+                    name: "cookies",
+                    ingredients: ["flour", "sugar", "chocolate"]
+                  }
+                ]
+              }
+            },
+            onAdd(recipe){
+              var updatedRecipes = this.state.recipes;
+              var size = Object.keys(this.state.recipes).length;
+              recipe.id = size;
+              updatedRecipes.push(recipe);
+              if(localStorage.getItem('_aadeyinka007_recipes') != null){
+                this.setData(updatedRecipes);
+              }
+            },
+            onEdit(recipe){
+              console.log("onEdit RecipeComponent");
+              console.log(recipe);
+              var recipes = this.state.recipes;
+              for(var i=0; i<this.state.recipes.length; i++){
+                if(recipes[i].id == recipe.id){
+                  recipes[i].name = recipe.name;
+                  recipes[i].ingredients = recipe.ingredients;
+                }
+              }
+              if(localStorage.getItem('_aadeyinka007_recipes') != null){
+                this.setData(recipes);
+              }
+            },
+            onDelete(recipe){
+
+              var recipes = this.state.recipes;
+              recipes = recipes.filter(function(item){
+                return item.id != recipe.id;
+              });
+
+              if(localStorage.getItem('_aadeyinka007_recipes') != null){
+                this.setData(recipes);
+              }
+            },
+            componentWillMount(){
+              this.getData();
+            },
+            getData(){
+              if(localStorage.getItem('_aadeyinka007_recipes') == null){
+                localStorage.setItem('_aadeyinka007_recipes', JSON.stringify(this.state.recipes));
+              }else{
+                var recipes = localStorage.getItem('_aadeyinka007_recipes');
+                this.setState({recipes: JSON.parse(recipes)});
+
+              }
+            },
+            setData(recipes){
+              localStorage.setItem('_aadeyinka007_recipes', JSON.stringify(recipes));
+              this.setState({recipes: recipes});
+            },
+            render(){
+              var recipes = this.state.recipes;
+              recipes = recipes.map(function(recipe, index){
+                return (
+                  <RecipeItem key={recipe.id} recipe={recipe} onEdit={this.onEdit} onDelete={this.onDelete}/>
+                );
+              }.bind(this));
+              return (
+                <div>
+                  <div className="well well-lg">
+                    <div className="panel-group" id="accordion">
+                      {recipes}
+                    </div>
+                  </div>
+                  <button className="btn btn-lg btn-primary" data-toggle="modal" data-target="#addModal">
+                    Add recipe
+                  </button>
+                  <AddModalComponent  onAdd={this.onAdd}/>
+                </div>
+            );
+          }
+        });
+
         ReactDOM.render(
-          <div>
-            My APP
+          <div className="container">
+              <nav className="navbar navbar-dark">
+                  <a className="navbar-brand" href="#"><h1>FCC Recipe Box</h1></a>
+              </nav>
+              <br />
+              <RecipeComponent />
           </div>,
           document.getElementById('root')
         );

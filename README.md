@@ -1,7 +1,7 @@
 # FCCRecipeBox
 
 * This single page application allows users to view, edit and delete recipes from a list of recipes.
-* URL:
+* URL: https://codepen.io/aadeyinka007/full/owEEWz
 
 ## Built With
 * [React.js](https://facebook.github.io/react/) - The frontend framework used
